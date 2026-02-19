@@ -30,7 +30,7 @@ export default async function Navbar() {
               </Link>
               <DropdownMenu>
                 <DropdownMenuTrigger>
-                  <Button>
+                  <Button variant="ghost">
                     <Avatar>
                       <AvatarFallback className="bg-primary">
                         {session.user.name[0].toUpperCase()}
