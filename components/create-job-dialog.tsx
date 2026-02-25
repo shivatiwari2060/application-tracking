@@ -126,7 +126,7 @@ export default function CreateJobApplicationDialog({
               <div className="space-y-2">
                 <Label htmlFor="salary">Salary</Label>
                 <input
-                  type="number"
+                  type="text"
                   id="salary"
                   className="w-full p-3 border"
                   placeholder="e.g:$100k-$150k"

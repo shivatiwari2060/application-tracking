@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { getSession } from "../auth/auth";
 import connectDB from "../db";
 import { Board, Column, JobApplication } from "../models";
@@ -85,5 +86,22 @@ export async function createJobApplication(data: JobApplicationData) {
   await Column.findByIdAndUpdate(columnId, {
     $push: { jobApplications: jobApplication._id },
   });
+  revalidatePath("/dashboard");
   return { data: JSON.parse(JSON.stringify(jobApplication.toObject())) };
 }
+
+export async function updateJobApplication(
+  id: string,
+  updates: {
+    company?: string;
+    position?: string;
+    location?: string;
+    notes?: string;
+    salary?: string;
+    jobUrl?: string;
+    columnId?: string;
+    order?: number;
+    tags?: string[];
+    description?: string;
+  }
+) {}
