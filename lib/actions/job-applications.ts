@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { getSession } from "../auth/auth";
 import connectDB from "../db";
 import { Board, Column, JobApplication } from "../models";
-import { object } from "better-auth";
+import { object, success } from "better-auth";
 
 interface JobApplicationData {
   company: string;
@@ -173,7 +173,7 @@ export async function updateJobApplication(
     updatesToApply.order = newOrderValue;
 
     await Column.findByIdAndUpdate(newColumnId, {
-      $push: { jobApplication: id },
+      $push: { jobApplications: id },
     });
   } else if (order !== null && order !== undefined) {
     const otherJobsInColumn = await JobApplication.find({
@@ -207,9 +207,38 @@ export async function updateJobApplication(
       for (const job of jobsToShiftUp) {
         const newOrder = Math.max(0, job.order - 100);
         await JobApplication.findByIdAndUpdate(job._id, {
-          $set: { order: job.order + 100 },
+          $set: { order: newOrder },
         });
       }
     }
+    updatesToApply.order = newOrderValue;
   }
+  const updated = await JobApplication.findByIdAndUpdate(id, updatesToApply, {
+    new: true,
+  });
+  revalidatePath("/dashboard");
+
+  return { data: JSON.parse(JSON.stringify(updated)) };
+}
+
+export async function deleteJobApplication(id: string) {
+  const session = await getSession();
+  if (!session?.user) {
+    return { error: "Unauthorized" };
+  }
+
+  const jobApplication = await JobApplication.findById(id);
+  if (!jobApplication) {
+    return { error: "Job application not found" };
+  }
+  if (jobApplication.userId !== session.user.id) {
+    return { error: "Unauthorized" };
+  }
+
+  await Column.findByIdAndUpdate(jobApplication.columnId, {
+    $pull: { jobApplications: id },
+  });
+  await JobApplication.deleteOne({ _id: id });
+  revalidatePath("/dashboard");
+  return { success: true };
 }
